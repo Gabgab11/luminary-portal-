@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin · Luminary Digital Group</title>
+<meta name="robots" content="noindex, nofollow" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<!-- pdf.js — used only to pull raw text out of uploaded PDFs client-side -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+  :root{
+    --ink: #0d0b09; --ink-card: #1a1512; --line: rgba(250,243,235,0.1); --line-strong: rgba(250,243,235,0.18);
+    --paper: #f7f2ea; --paper-dim: rgba(247,242,234,0.65); --paper-faint: rgba(247,242,234,0.42);
+    --orange: #ff6a2b; --amber: #ffb627; --grad: linear-gradient(120deg, var(--orange), var(--amber));
+    --green: #2fbf6f; --green-bg: rgba(47,191,111,0.12);
+    --red: #ff6a6a; --red-bg: rgba(255,106,106,0.1);
+    --font-d: "Space Grotesk", sans-serif; --font-b: "Inter", sans-serif; --font-m: "IBM Plex Mono", monospace;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  body{ margin:0; background:var(--ink); color:var(--paper); font-family:var(--font-b); line-height:1.5; }
+  h1,h2,h3{ font-family:var(--font-d); margin:0; }
+  input,select,textarea,button{ font-family:inherit; }
+  ::placeholder{ color: var(--paper-faint); }
+
+  /* ---------- login ---------- */
+  .login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .login-card{ width:100%; max-width:380px; background:var(--ink-card); border:1px solid var(--line-strong); border-radius:16px; padding:36px 32px; }
+  .login-card h1{ font-size:22px; margin-bottom:6px; }
+  .login-card p{ color:var(--paper-dim); font-size:13.5px; margin-bottom:24px; }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+  .field label{ font-family:var(--font-m); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--paper-faint); }
+  .field input, .field select, .field textarea{
+    background:rgba(255,255,255,0.04); border:1px solid var(--line-strong); border-radius:9px;
+    padding:11px 13px; color:var(--paper); font-size:14.5px; width:100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--orange); background:rgba(255,106,43,0.06); }
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; border-radius:9px; padding:12px 18px; font-size:14px; font-weight:600; cursor:pointer; transition:.2s ease; }
+  .btn-primary{ background:var(--grad); color:var(--ink); }
+  .btn-primary.full{ width:100%; }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .btn-primary:disabled{ opacity:.5; cursor:not-allowed; filter:none; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line-strong); color:var(--paper-dim); }
+  .btn-ghost:hover{ border-color:var(--orange); color:var(--paper); }
+  .error-msg{ background:var(--red-bg); color:var(--red); border:1px solid rgba(255,106,106,0.3); border-radius:8px; padding:10px 13px; font-size:13px; margin-bottom:16px; display:none; }
+
+  /* ---------- shell ---------- */
+  .app{ display:none; }
+  .app.is-visible{ display:block; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; padding:16px 28px; border-bottom:1px solid var(--line); position:sticky; top:0; background:rgba(13,11,9,0.9); backdrop-filter:blur(10px); z-index:10; }
+  .topbar-brand{ font-family:var(--font-d); font-weight:700; font-size:15px; }
+  .topbar-brand span{ color:var(--paper-dim); font-weight:500; }
+  .shell{ max-width:960px; margin:0 auto; padding:32px 24px 80px; }
+
+  .card{ background:var(--ink-card); border:1px solid var(--line-strong); border-radius:16px; padding:26px 28px; margin-bottom:24px; }
+  .card h2{ font-size:18px; margin-bottom:4px; }
+  .card-sub{ color:var(--paper-dim); font-size:13.5px; margin-bottom:22px; }
+
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:600px){ .row2{ grid-template-columns:1fr; } }
+
+  /* ---------- new client form ---------- */
+  .checkbox-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:4px; }
+  @media (max-width:600px){ .checkbox-grid{ grid-template-columns:1fr; } }
+  .checkbox-item{
+    display:flex; align-items:center; gap:9px; border:1px solid var(--line-strong); border-radius:9px;
+    padding:11px 13px; cursor:pointer; transition:.2s ease; font-size:13.5px;
+  }
+  .checkbox-item:hover{ border-color:var(--orange); }
+  .checkbox-item input{ accent-color:var(--orange); width:16px; height:16px; }
+
+  .link-result{
+    display:none; margin-top:18px; padding:18px 20px; background:rgba(47,191,111,0.08);
+    border:1px solid rgba(47,191,111,0.3); border-radius:12px;
+  }
+  .link-result.is-visible{ display:block; }
+  .link-result-label{ font-family:var(--font-m); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--green); margin-bottom:8px; }
+  .link-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .link-row input{
+    flex:1; min-width:200px; background:rgba(255,255,255,0.05); border:1px solid var(--line-strong);
+    border-radius:8px; padding:10px 12px; color:var(--paper); font-family:var(--font-m); font-size:12.5px;
+  }
+
+  /* ---------- client list ---------- */
+  .client-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; padding:16px 0;
+    border-bottom:1px solid var(--line); flex-wrap:wrap;
+  }
+  .client-row:last-child{ border-bottom:none; }
+  .client-main{ display:flex; flex-direction:column; gap:5px; }
+  .client-name{ font-weight:600; font-size:15px; }
+  .client-meta{ font-family:var(--font-m); font-size:12px; color:var(--paper-faint); }
+  .service-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:2px; }
+  .service-tag{ font-family:var(--font-m); font-size:10.5px; padding:3px 9px; border-radius:100px; background:rgba(255,106,43,0.1); color:var(--orange-soft, var(--orange)); border:1px solid rgba(255,106,43,0.25); }
+  .client-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .icon-btn{ background:none; border:1px solid var(--line-strong); color:var(--paper-dim); border-radius:7px; padding:7px 11px; font-size:12px; cursor:pointer; }
+  .icon-btn:hover{ border-color:var(--orange); color:var(--paper); }
+  .icon-btn.active{ border-color:var(--orange); color:var(--orange); background:rgba(255,106,43,0.08); }
+  .empty-note{ color:var(--paper-faint); font-size:13.5px; }
+
+  /* ---------- report upload ---------- */
+  .dropzone{
+    border:1.5px dashed var(--line-strong); border-radius:12px; padding:26px; text-align:center;
+    color:var(--paper-faint); font-size:13.5px; cursor:pointer; transition:.2s ease; margin-top:4px;
+  }
+  .dropzone:hover, .dropzone.is-dragover{ border-color:var(--orange); background:rgba(255,106,43,0.05); color:var(--paper-dim); }
+  .dropzone input{ display:none; }
+  .hint-note{ font-size:12px; color:var(--paper-faint); margin-top:8px; }
+
+  .extract-status{ font-family:var(--font-m); font-size:12.5px; color:var(--paper-faint); margin-top:10px; min-height:16px; }
+  .extract-status.is-busy{ color:var(--amber); }
+  .extract-status.is-done{ color:var(--green); }
+
+  .review-grid{ display:none; margin-top:20px; padding-top:20px; border-top:1px solid var(--line); }
+  .review-grid.is-visible{ display:block; }
+  .metric-row{ display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:center; margin-bottom:10px; }
+  @media (max-width:600px){ .metric-row{ grid-template-columns:1fr; } }
+  .metric-row label{ font-size:13px; color:var(--paper-dim); }
+  .tag{ font-family:var(--font-m); font-size:10.5px; padding:4px 9px; border-radius:100px; white-space:nowrap; justify-self:start; }
+  .tag.found{ background:var(--green-bg); color:var(--green); }
+  .tag.missing{ background:rgba(255,255,255,0.05); color:var(--paper-faint); }
+
+  .form-actions{ display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
+
+  /* ---------- reports list ---------- */
+  .report-item{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .report-item:last-child{ border-bottom:none; }
+  .report-main{ display:flex; flex-direction:column; gap:3px; }
+  .report-title{ font-weight:600; font-size:14.5px; }
+  .report-meta{ font-family:var(--font-m); font-size:12px; color:var(--paper-faint); }
+  .status-pill{ font-family:var(--font-m); font-size:11px; padding:5px 11px; border-radius:100px; }
+  .status-pill.published{ background:var(--green-bg); color:var(--green); }
+  .status-pill.draft{ background:rgba(255,182,39,0.12); color:var(--amber); }
+  .report-actions{ display:flex; gap:8px; }
+  .icon-btn.danger:hover{ border-color:var(--red); color:var(--red); }
+
+  .no-client-note{ color:var(--paper-faint); font-size:13.5px; font-style:italic; }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <h1>Admin sign in</h1>
+    <p>Luminary Digital Group &mdash; internal use only.</p>
+    <div class="error-msg" id="loginError"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn btn-primary full" id="loginBtn">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="topbar-brand">Luminary <span>Admin</span></div>
+    <button class="btn btn-ghost" id="logoutBtn">Sign out</button>
+  </div>
+
+  <div class="shell">
+
+    <!-- Create a new client -->
+    <div class="card">
+      <h2>Create a new client</h2>
+      <p class="card-sub">This generates their own private portal link — nothing else to set up.</p>
+
+      <div class="field">
+        <label for="newClientName">Client / business name</label>
+        <input type="text" id="newClientName" placeholder="e.g. Kairos Kreations" required />
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="newClientStart">Contract start date</label>
+          <input type="date" id="newClientStart" required />
+        </div>
+        <div class="field">
+          <label for="newClientDuration">Contract duration (months)</label>
+          <input type="number" id="newClientDuration" min="1" step="1" value="3" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Services</label>
+        <div class="checkbox-grid">
+          <label class="checkbox-item"><input type="checkbox" value="websiteDesign" /> Website design</label>
+          <label class="checkbox-item"><input type="checkbox" value="seo" /> SEO</label>
+          <label class="checkbox-item"><input type="checkbox" value="mobileApp" /> Mobile app development</label>
+          <label class="checkbox-item"><input type="checkbox" value="googleAds" /> Google Ads</label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="createClientBtn" style="margin-top:6px;">Create client &amp; generate link</button>
+
+      <div class="link-result" id="linkResult">
+        <div class="link-result-label">Portal link ready</div>
+        <div class="link-row">
+          <input type="text" id="linkOutput" readonly />
+          <button class="btn btn-ghost" id="copyLinkBtn" type="button">Copy</button>
+          <button class="btn btn-ghost" id="openLinkBtn" type="button">Open</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Client list -->
+    <div class="card">
+      <h2>Your clients</h2>
+      <p class="card-sub">Pick a client below to upload reports for them, or jump straight into their portal.</p>
+      <div id="clientList">
+        <p class="empty-note">Loading&hellip;</p>
+      </div>
+    </div>
+
+    <!-- Upload a report -->
+    <div class="card">
+      <h2>Upload a report <span id="uploadingForLabel" style="color:var(--paper-faint); font-weight:500; font-size:14px;"></span></h2>
+      <p class="card-sub">Drop in a PDF exported from Meta, TikTok, or Google Ads. We'll pull out the numbers we can find &mdash; check them over before publishing.</p>
+
+      <div id="noClientSelected" class="no-client-note">Select a client above first.</div>
+
+      <div id="uploadForm" style="display:none;">
+        <div class="row2">
+          <div class="field">
+            <label for="reportMonth">Month</label>
+            <input type="month" id="reportMonth" required />
+          </div>
+          <div class="field">
+            <label for="reportPlatform">Platform</label>
+            <select id="reportPlatform">
+              <option value="meta">Meta (Facebook/Instagram)</option>
+              <option value="tiktok">TikTok</option>
+              <option value="google">Google Ads</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>PDF report</label>
+          <label class="dropzone" id="dropzone">
+            <span id="dropzoneLabel">Click to choose a PDF, or drag one here</span>
+            <input type="file" id="pdfInput" accept="application/pdf" />
+          </label>
+          <p class="hint-note">Read entirely in your browser to pull out the numbers — the file itself is never uploaded or stored anywhere.</p>
+          <div class="extract-status" id="extractStatus"></div>
+        </div>
+
+        <div class="review-grid" id="reviewGrid">
+          <div class="metric-row">
+            <label for="mSpend">Amount spent</label>
+            <input type="number" step="0.01" id="mSpend" placeholder="0.00" />
+            <span class="tag missing" id="tagSpend">not found</span>
+          </div>
+          <div class="metric-row">
+            <label for="mResults">Results (leads/conversions)</label>
+            <input type="number" step="1" id="mResults" placeholder="0" />
+            <span class="tag missing" id="tagResults">not found</span>
+          </div>
+          <div class="metric-row">
+            <label for="mCpr">Cost per result</label>
+            <input type="number" step="0.01" id="mCpr" placeholder="0.00" />
+            <span class="tag missing" id="tagCpr">not found</span>
+          </div>
+          <div class="metric-row">
+            <label for="mImpressions">Impressions</label>
+            <input type="number" step="1" id="mImpressions" placeholder="0" />
+            <span class="tag missing" id="tagImpressions">not found</span>
+          </div>
+          <div class="metric-row">
+            <label for="mClicks">Clicks</label>
+            <input type="number" step="1" id="mClicks" placeholder="0" />
+            <span class="tag missing" id="tagClicks">not found</span>
+          </div>
+          <div class="metric-row">
+            <label for="mCtr">CTR (%)</label>
+            <input type="number" step="0.01" id="mCtr" placeholder="0.00" />
+            <span class="tag missing" id="tagCtr">not found</span>
+          </div>
+
+          <div class="field" style="margin-top:14px;">
+            <label for="mNotes">Note to client (optional)</label>
+            <textarea id="mNotes" rows="3" placeholder="A line or two explaining the month, in plain English."></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" id="publishBtn" style="width:auto;">Save &amp; publish</button>
+            <button class="btn btn-ghost" id="draftBtn">Save as draft</button>
+            <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Existing reports -->
+    <div class="card">
+      <h2>Reports <span id="reportsForLabel" style="color:var(--paper-faint); font-weight:500; font-size:14px;"></span></h2>
+      <p class="card-sub">Drafts are only visible here. Publishing is what makes a report appear in the client's portal.</p>
+      <div id="reportsList">
+        <p class="empty-note">Select a client above to see their reports.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>

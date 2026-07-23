@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script>
+  // Runs immediately, before the page paints, so a returning visitor
+  // (already saved in localStorage) never sees the gate flash on screen.
+  // Scoped per client slug, matching the key script.js uses later.
+  // If there's no ?client= at all, this is the shared landing page —
+  // skip the check entirely so it doesn't hide the landing chooser.
+  (function(){
+    try{
+      var params = new URLSearchParams(window.location.search);
+      var slug = params.get("client");
+      if (slug && localStorage.getItem("luminaryPortalVisitor:" + slug)){
+        document.documentElement.classList.add("skip-gate");
+      }
+    } catch(e){}
+  })();
+</script>
+<title>Client Portal · Luminary Digital Group</title>
+<meta name="description" content="Private client portal, powered by Luminary Digital Group." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="gate-active">
+
+<!-- ============ ICON SPRITE ============ -->
+<svg style="display:none">
+  <symbol id="icon-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
+    <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 19 3a12.88 12.88 0 0 1-2.02 8A22 22 0 0 1 12 15z"/>
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+  </symbol>
+  <symbol id="icon-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 17l6-6 4 4 8-8"/>
+    <path d="M17 6h4v4"/>
+  </symbol>
+  <symbol id="icon-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 20V10M12 20V4M20 20v-7"/>
+    <path d="M2 20h20"/>
+  </symbol>
+  <symbol id="icon-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+    <path d="M14 2v6h6M9 13h6M9 17h6"/>
+  </symbol>
+  <symbol id="icon-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/>
+  </symbol>
+  <symbol id="icon-bulb" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18h6M10 22h4"/>
+    <path d="M12 2a7 7 0 0 0-4 12.74c.6.44.94 1.15.94 1.9V17h6.12v-.36c0-.75.34-1.46.94-1.9A7 7 0 0 0 12 2z"/>
+  </symbol>
+  <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3v12m0 0l-4-4m4 4l4-4"/>
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+  </symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4.5" y="11" width="15" height="9" rx="2"/>
+    <path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 12l5 5L20 6"/>
+  </symbol>
+</svg>
+
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ============ INTAKE GATE ============ -->
+<div class="gate" id="gate">
+  <div class="gate-glow" aria-hidden="true"></div>
+
+  <div class="gate-card card-glass" id="gateLoading">
+    <span class="eyebrow">Private client portal</span>
+    <h2>Loading your portal&hellip;</h2>
+    <p class="gate-sub">One second while we pull up your details.</p>
+  </div>
+
+  <div class="gate-card card-glass" id="gateLanding" style="display:none;">
+    <span class="eyebrow">Luminary Digital Group</span>
+    <h2>Welcome</h2>
+    <p class="gate-sub">Choose where you're headed.</p>
+    <a href="admin.html" class="gate-submit">Admin sign in <span aria-hidden="true">&rarr;</span></a>
+    <p class="gate-note">Here as a client? Open the private link you were sent &mdash; this page is just the front door.</p>
+  </div>
+
+  <div class="gate-card card-glass" id="gateNotFound" style="display:none;">
+    <span class="eyebrow">Private client portal</span>
+    <h2>We couldn't find this portal</h2>
+    <p class="gate-sub">This link doesn't match an active client. Double-check the URL, or reach out to Luminary Digital Group for the correct link.</p>
+  </div>
+
+  <form class="gate-card card-glass" id="gateForm" novalidate style="display:none;">
+    <span class="eyebrow">Private client portal</span>
+    <h2>Let's get you in</h2>
+    <p class="gate-sub">Tell us who's joining so your portal is set up correctly.</p>
+
+    <div class="gate-row">
+      <div class="gate-field">
+        <label for="gateFirstName">First name</label>
+        <input type="text" id="gateFirstName" name="firstName" autocomplete="given-name" required />
+      </div>
+      <div class="gate-field">
+        <label for="gateLastName">Last name</label>
+        <input type="text" id="gateLastName" name="lastName" autocomplete="family-name" required />
+      </div>
+    </div>
+    <div class="gate-field">
+      <label for="gateEmail">Email</label>
+      <input type="email" id="gateEmail" name="email" autocomplete="email" required />
+    </div>
+
+    <button type="submit" class="gate-submit">Enter portal <span aria-hidden="true">&rarr;</span></button>
+    <p class="gate-note">This just personalizes your portal &mdash; no password needed.</p>
+  </form>
+</div>
+
+<!-- ============ NAV ============ -->
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="brand-word">Luminary<span class="brand-word-light">Digital&nbsp;Group</span></span>
+    </div>
+    <nav class="nav-links">
+      <a href="#progress">Overview</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#reports">Reports</a>
+    </nav>
+    <div class="client-chip">
+      <span class="dot"></span>
+      <span id="navClientCompany" class="js-company-name">Kairos Kreations</span>
+      <span class="client-chip-sub js-visitor-name">Private Portal</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-inner">
+      <span class="eyebrow">Private client portal</span>
+      <h1>Welcome, <span class="js-first-name accent-text">there</span>.</h1>
+      <p class="hero-sub">
+        This is where <strong id="clientCompanyA" class="js-company-name">Kairos Kreations</strong> and
+        <strong>Luminary Digital Group</strong> track a single 90&#8209;day campaign,
+        month by month, decision by decision.
+      </p>
+
+      <div class="hero-meta">
+        <div class="meta-chip">
+          <span class="meta-label">Launch date</span>
+          <span class="meta-value" id="launchDateChip">August 1, 2026</span>
+        </div>
+        <div class="meta-chip">
+          <span class="meta-label">Engagement</span>
+          <span class="meta-value">90 days</span>
+        </div>
+        <div class="meta-chip">
+          <span class="meta-label">Cadence</span>
+          <span class="meta-value">Monthly reporting</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MISSION CONTROL / LIVE PROGRESS ============ -->
+  <section class="section" id="progress">
+    <div class="card-glass mission-control reveal">
+      <div class="mc-head">
+        <div>
+          <span class="section-eyebrow">Mission control</span>
+          <h2>Where things stand right now</h2>
+        </div>
+        <span class="phase-badge" id="phaseBadge">Pre&#8209;launch</span>
+      </div>
+
+      <p class="mc-status" id="mcStatusText">Calculating campaign status&hellip;</p>
+
+      <div class="progress-track" role="progressbar" aria-label="Campaign progress" aria-valuemin="0" aria-valuemax="100" id="progressTrack">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-scale">
+        <span>Launch</span>
+        <span>Day 30</span>
+        <span>Day 60</span>
+        <span>Day 90</span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat">
+          <span class="stat-num" data-count="3">0</span>
+          <span class="stat-label">Months of partnership</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-count="90">0</span>
+          <span class="stat-label">Days in this campaign</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-count="4">0</span>
+          <span class="stat-label">Deliverables every month</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" data-count="1">0</span>
+          <span class="stat-label">Strategy built for you</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROADMAP / TIMELINE ============ -->
+  <section class="section" id="roadmap">
+    <div class="section-head reveal">
+      <span class="section-eyebrow">The plan</span>
+      <h2>Your 90&#8209;day roadmap</h2>
+      <p class="section-lede">Three months, three jobs to do. Nothing overlaps by accident &mdash; each phase builds on the one before it.</p>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-rail">
+        <div class="timeline-fill" id="timelineFill"></div>
+      </div>
+
+      <article class="timeline-node reveal" data-phase="foundation">
+        <div class="node-marker"><svg viewBox="0 0 24 24"><use href="#icon-rocket"/></svg></div>
+        <div class="node-body">
+          <span class="node-index">Month 01 &middot; Days 1&ndash;30</span>
+          <h3>Foundation &amp; launch</h3>
+          <p>Audience research, creative direction, campaign build, tracking installed, and everything goes live.</p>
+          <ul class="node-list">
+            <li>Audience &amp; competitor research</li>
+            <li>Creative design and ad setup</li>
+            <li>Tracking &amp; analytics installed</li>
+            <li>Campaign launch</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="timeline-node reveal" data-phase="optimization">
+        <div class="node-marker"><svg viewBox="0 0 24 24"><use href="#icon-trend"/></svg></div>
+        <div class="node-body">
+          <span class="node-index">Month 02 &middot; Days 31&ndash;60</span>
+          <h3>Optimization</h3>
+          <p>We let the data talk. Weak audiences get cut, strong ones get fed, and cost per lead comes down.</p>
+          <ul class="node-list">
+            <li>Audience &amp; creative testing</li>
+            <li>Cost efficiency improvements</li>
+            <li>Conversion tracking refinement</li>
+            <li>Qualified lead volume increases</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="timeline-node reveal" data-phase="scale">
+        <div class="node-marker"><svg viewBox="0 0 24 24"><use href="#icon-scale"/></svg></div>
+        <div class="node-body">
+          <span class="node-index">Month 03 &middot; Days 61&ndash;90</span>
+          <h3>Scale</h3>
+          <p>What's working gets more budget. We lock in the winning formula and hand you a plan for month four and beyond.</p>
+          <ul class="node-list">
+            <li>Scale winning campaigns</li>
+            <li>Maximize return on ad spend</li>
+            <li>Long-term strategy handoff</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ WHAT TO EXPECT ============ -->
+  <section class="section" id="expect">
+    <div class="section-head reveal">
+      <span class="section-eyebrow">Every month, without fail</span>
+      <h2>What you'll receive</h2>
+      <p class="section-lede">At the close of every month, four things land in this portal &mdash; no chasing, no guessing.</p>
+    </div>
+
+    <div class="expect-grid">
+      <div class="expect-card reveal">
+        <div class="expect-icon"><svg viewBox="0 0 24 24"><use href="#icon-doc"/></svg></div>
+        <h3>Performance report</h3>
+        <p>The full breakdown &mdash; spend, leads, cost per result, and how the month moved against the last one.</p>
+      </div>
+      <div class="expect-card reveal">
+        <div class="expect-icon"><svg viewBox="0 0 24 24"><use href="#icon-spark"/></svg></div>
+        <h3>Plain-English summary</h3>
+        <p>An AI-assisted summary that translates the numbers into what actually happened and why it matters.</p>
+      </div>
+      <div class="expect-card reveal">
+        <div class="expect-icon"><svg viewBox="0 0 24 24"><use href="#icon-bulb"/></svg></div>
+        <h3>Next-month recommendations</h3>
+        <p>Specific, prioritized moves for the coming month &mdash; not a generic checklist.</p>
+      </div>
+      <div class="expect-card reveal">
+        <div class="expect-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></div>
+        <h3>Downloadable documents</h3>
+        <p>Reports and campaign files, kept here so you always have a record to come back to.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MONTHLY REPORTS ============ -->
+  <section class="section" id="reports">
+    <div class="section-head reveal">
+      <span class="section-eyebrow">Your archive</span>
+      <h2>Monthly reports &amp; downloads</h2>
+      <p class="section-lede">Each report unlocks the moment its month closes. Nothing to request &mdash; it'll simply be here.</p>
+    </div>
+
+    <div class="reports-grid" id="reportsGrid">
+      <!-- populated by script.js from CLIENT config -->
+    </div>
+  </section>
+
+  <!-- ============ THANK YOU ============ -->
+  <section class="section">
+    <div class="card-glass thanks-card reveal">
+      <span class="section-eyebrow">From the whole team @Luminary</span>
+      <h2>Thank you for trusting us with this, <span class="js-first-name">there</span>.</h2>
+      <p>
+        <span class="js-company-name">Your business</span> took a chance on a plan instead of a vague retainer.
+        We have this portal specially for you so that chance never feels like a black box
+        &mdash; you'll see exactly what we're doing and why, every step of the way.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Luminary Digital Group &middot; built for <span class="js-company-name">your business</span></span>
+    <span class="footer-sep">&middot;</span>
+    <span>This is a private link &mdash; please don't share it outside your team.</span>
+    <span class="footer-sep">&middot;</span>
+    <button type="button" id="logoutBtn" class="footer-logout">Log out</button>
+  </div>
+</footer>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
