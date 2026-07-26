@@ -40,6 +40,7 @@ const CLIENT = {
   launchDate: "2026-08-01T00:00:00",
   durationDays: 90,
   phases: [],
+  services: [],
 };
 
 const DAY_MS = 86400000;
@@ -255,6 +256,113 @@ function initLogout(){
 }
 
 /* ---------------------------------------------------------------------- */
+/* Render: roadmap — different content per service the client signed up   */
+/* for, not one generic script for everyone.                              */
+/* ---------------------------------------------------------------------- */
+
+const SERVICE_LABEL = {
+  websiteDesign: "Website design",
+  seo: "SEO",
+  mobileApp: "Mobile app development",
+  googleAds: "Google Ads",
+};
+
+const PHASE_INTRO = {
+  foundation: "The groundwork phase — everything gets set up, and it goes live.",
+  optimization: "We let real performance data guide what happens next.",
+  scale: "What's working gets more investment, and we hand off a plan for what's next.",
+};
+
+// Three phases per service (foundation / optimization / scale), matching
+// the three timeline nodes already in the HTML. Add a new key here (and to
+// the checkboxes in admin.html) if you add a new service later.
+const SERVICE_ROADMAP = {
+  websiteDesign: {
+    label: "Website design & build",
+    foundation: ["Audience & competitor research", "Wireframes & visual design direction", "Core pages built & content loaded"],
+    optimization: ["Conversion-focused refinements from real user behavior", "Mobile & speed performance pass", "On-page SEO cleanup"],
+    scale: ["Cross-device QA & polish", "Launch-ready handoff", "Plan for ongoing updates"],
+  },
+  seo: {
+    label: "SEO",
+    foundation: ["Technical SEO audit", "Keyword & competitor research", "On-page optimization pass"],
+    optimization: ["Content built around target keywords", "Internal linking structure", "Early ranking movement tracked"],
+    scale: ["Link building & digital PR", "Double down on top-performing topics", "Long-term keyword strategy handoff"],
+  },
+  mobileApp: {
+    label: "Mobile app development",
+    foundation: ["Product scoping & user flows", "UI design & prototyping", "Technical architecture set"],
+    optimization: ["Core development across iOS & Android", "Internal QA & bug fixes", "Beta testing with real users"],
+    scale: ["App store submission & approval", "Launch monitoring & crash fixes", "Roadmap for v2 features"],
+  },
+  googleAds: {
+    label: "Google Ads",
+    foundation: ["Account audit & campaign rebuild", "Ad creative & landing pages", "Tracking & conversions installed"],
+    optimization: ["Audience & creative testing", "Cost efficiency improvements", "Qualified lead volume increases"],
+    scale: ["Scale winning campaigns", "Maximize return on ad spend", "Long-term budget strategy"],
+  },
+};
+
+// Fallback for clients created before `services` existed, or with none checked.
+const GENERIC_PHASE = {
+  foundation: { label: "Foundation & launch", bullets: ["Audience & competitor research", "Creative design and ad setup", "Tracking & analytics installed", "Campaign launch"] },
+  optimization: { label: "Optimization", bullets: ["Audience & creative testing", "Cost efficiency improvements", "Conversion tracking refinement", "Qualified lead volume increases"] },
+  scale: { label: "Scale", bullets: ["Scale winning campaigns", "Maximize return on ad spend", "Long-term strategy handoff"] },
+};
+
+function formatDayRange(phaseDef){
+  const start = Math.round(phaseDef.startDay) + 1;
+  const end = Math.round(phaseDef.endDay);
+  return `Days ${start}–${end}`;
+}
+
+function renderRoadmap(){
+  const services = Array.isArray(CLIENT.services) ? CLIENT.services.filter((s) => SERVICE_ROADMAP[s]) : [];
+  const phaseKeys = ["foundation", "optimization", "scale"];
+
+  phaseKeys.forEach((phaseKey, i) => {
+    const node = document.querySelector(`.timeline-node[data-phase="${phaseKey}"]`);
+    if (!node) return;
+    const phaseDef = CLIENT.phases.find((p) => p.key === phaseKey);
+    const indexEl = node.querySelector(".node-index");
+    const titleEl = node.querySelector("h3");
+    const introEl = node.querySelector(".node-body > p");
+    const listEl = node.querySelector(".node-list");
+
+    if (indexEl && phaseDef){
+      indexEl.textContent = `Phase ${i + 1} · ${formatDayRange(phaseDef)}`;
+    }
+    if (introEl){
+      introEl.textContent = PHASE_INTRO[phaseKey];
+    }
+
+    if (services.length === 0){
+      const g = GENERIC_PHASE[phaseKey];
+      if (titleEl) titleEl.textContent = g.label;
+      if (listEl) listEl.innerHTML = g.bullets.map((b) => `<li>${b}</li>`).join("");
+      return;
+    }
+
+    if (services.length === 1){
+      const svc = SERVICE_ROADMAP[services[0]];
+      if (titleEl) titleEl.textContent = svc.label;
+      if (listEl) listEl.innerHTML = svc[phaseKey].map((b) => `<li>${b}</li>`).join("");
+      return;
+    }
+
+    // Multiple services — blend everyone's step for this phase into one
+    // list, labeling each line so it's still clear which service it's for.
+    const label = services.map((s) => SERVICE_LABEL[s] || s).join(" + ");
+    const bullets = services.flatMap((s) => {
+      const svc = SERVICE_ROADMAP[s];
+      return svc[phaseKey].map((b) => `<strong>${SERVICE_LABEL[s] || s}:</strong> ${b}`);
+    });
+    if (titleEl) titleEl.textContent = label;
+    if (listEl) listEl.innerHTML = bullets.map((b) => `<li>${b}</li>`).join("");
+  });
+}
+
+/* ---------------------------------------------------------------------- */
 /* Render: mission control (live status)                                  */
 /* ---------------------------------------------------------------------- */
 
@@ -265,6 +373,32 @@ const PHASE_DISPLAY_LABEL = {
   scale: "Scale",
   complete: "Complete",
 };
+
+// Everything on the page that quotes the engagement length — the hero
+// chip, stat counters, and the progress bar's day markers — driven off the
+// client's real durationDays instead of a hardcoded "90".
+function renderDurationDetails(){
+  const days = CLIENT.durationDays;
+  const months = Math.round(days / 30);
+
+  const chip = document.getElementById("engagementChip");
+  if (chip) chip.textContent = `${days} days`;
+
+  const statDays = document.getElementById("statDays");
+  if (statDays) statDays.dataset.count = days;
+  const statMonths = document.getElementById("statMonths");
+  if (statMonths) statMonths.dataset.count = months;
+
+  const heading = document.getElementById("roadmapHeading");
+  if (heading) heading.textContent = `Your ${days}‑day roadmap`;
+
+  const scale = document.getElementById("progressScale");
+  if (scale && CLIENT.phases.length === 3){
+    const marks = [0, Math.round(CLIENT.phases[0].endDay), Math.round(CLIENT.phases[1].endDay), days];
+    const labels = ["Launch", `Day ${marks[1]}`, `Day ${marks[2]}`, `Day ${marks[3]}`];
+    scale.innerHTML = labels.map((l) => `<span>${l}</span>`).join("");
+  }
+}
 
 function renderMissionControl(){
   const status = getCampaignStatus();
@@ -522,9 +656,12 @@ onAuthStateChanged(auth, async (user) => {
   CLIENT.launchDate = c.launchDate || CLIENT.launchDate;
   CLIENT.durationDays = c.durationMonths ? c.durationMonths * 30 : CLIENT.durationDays;
   CLIENT.phases = computePhases(CLIENT.durationDays);
+  CLIENT.services = Array.isArray(c.services) ? c.services : [];
 
   renderClientDetails();
+  renderDurationDetails();
   renderMissionControl();
+  renderRoadmap();
   initLiveReports();
   initReveal();
   initCounters();
