@@ -192,7 +192,7 @@
         </div>
         <div class="meta-chip">
           <span class="meta-label">Engagement</span>
-          <span class="meta-value">90 days</span>
+          <span class="meta-value" id="engagementChip">90 days</span>
         </div>
         <div class="meta-chip">
           <span class="meta-label">Cadence</span>
@@ -218,7 +218,7 @@
       <div class="progress-track" role="progressbar" aria-label="Campaign progress" aria-valuemin="0" aria-valuemax="100" id="progressTrack">
         <div class="progress-fill" id="progressFill"></div>
       </div>
-      <div class="progress-scale">
+      <div class="progress-scale" id="progressScale">
         <span>Launch</span>
         <span>Day 30</span>
         <span>Day 60</span>
@@ -227,11 +227,11 @@
 
       <div class="stat-row">
         <div class="stat">
-          <span class="stat-num" data-count="3">0</span>
+          <span class="stat-num" id="statMonths" data-count="3">0</span>
           <span class="stat-label">Months of partnership</span>
         </div>
         <div class="stat">
-          <span class="stat-num" data-count="90">0</span>
+          <span class="stat-num" id="statDays" data-count="90">0</span>
           <span class="stat-label">Days in this campaign</span>
         </div>
         <div class="stat">
@@ -250,8 +250,8 @@
   <section class="section" id="roadmap">
     <div class="section-head reveal">
       <span class="section-eyebrow">The plan</span>
-      <h2>Your 90&#8209;day roadmap</h2>
-      <p class="section-lede">Three months, three jobs to do. Nothing overlaps by accident &mdash; each phase builds on the one before it.</p>
+      <h2 id="roadmapHeading">Your 90&#8209;day roadmap</h2>
+      <p class="section-lede" id="roadmapLede">Three phases, one job each. Nothing overlaps by accident &mdash; each phase builds on the one before it.</p>
     </div>
 
     <div class="timeline">
