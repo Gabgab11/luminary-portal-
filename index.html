@@ -4,6 +4,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <script>
+  // Stop the browser from restoring a previous scroll position on reload —
+  // without this, refreshing partway down the page (or right after the
+  // gate dismisses) can land you lower on the page instead of at the top.
+  if ("scrollRestoration" in history){
+    history.scrollRestoration = "manual";
+  }
+  window.scrollTo(0, 0);
+
   // Runs immediately, before the page paints, so a returning visitor
   // (already saved in localStorage) never sees the gate flash on screen.
   // Scoped per client slug, matching the key script.js uses later.
