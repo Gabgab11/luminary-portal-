@@ -15,6 +15,7 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
+  getDocs,
   setDoc,
   onSnapshot,
   query,
@@ -318,6 +319,7 @@ function listenToClients() {
           <button class="icon-btn select-btn" data-slug="${slug}">Select</button>
           <button class="icon-btn" data-action="copy" data-slug="${slug}">Copy link</button>
           <button class="icon-btn" data-action="open" data-slug="${slug}">Open portal</button>
+          <button class="icon-btn danger" data-action="delete" data-slug="${slug}">Delete</button>
         </div>
       `;
       clientList.appendChild(row);
@@ -339,7 +341,20 @@ function highlightSelected() {
   });
 }
 
-clientList.addEventListener("click", (event) => {
+// Deletes a client's Firestore doc and all of their monthlyReports docs.
+// Note: this does NOT delete their Firebase Auth login — Firebase's free
+// (Spark) tier has no client-side way to delete another user's account,
+// that requires the Admin SDK (a paid Blaze-plan Cloud Function). If you
+// want their login fully gone too, remove it manually in Firebase Console
+// → Authentication → find their email → Delete user.
+async function deleteClientCompletely(slug) {
+  const reportsRef = collection(db, "clients", slug, "monthlyReports");
+  const reportsSnap = await getDocs(reportsRef);
+  await Promise.all(reportsSnap.docs.map((d) => deleteDoc(d.ref)));
+  await deleteDoc(doc(db, "clients", slug));
+}
+
+clientList.addEventListener("click", async (event) => {
   const btn = event.target.closest("button[data-slug]");
   if (!btn) return;
   const slug = btn.dataset.slug;
@@ -357,6 +372,28 @@ clientList.addEventListener("click", (event) => {
   }
   if (btn.dataset.action === "open") {
     window.open(buildPortalLink(slug), "_blank");
+  }
+  if (btn.dataset.action === "delete") {
+    const confirmed = confirm(
+      `Delete "${slug}"? This removes their portal and all reports permanently. Their login account stays in Firebase (delete it separately in Firebase Console if needed). This can't be undone.`
+    );
+    if (!confirmed) return;
+
+    btn.disabled = true;
+    btn.textContent = "Deleting…";
+    try {
+      await deleteClientCompletely(slug);
+      if (selectedClientSlug === slug) {
+        selectedClientSlug = null;
+        uploadForm.style.display = "none";
+        noClientSelected.style.display = "block";
+        reportsList.innerHTML = '<p class="empty-note">Select a client above to see their reports.</p>';
+      }
+    } catch (err) {
+      alert("Couldn't delete that client: " + err.message);
+      btn.disabled = false;
+      btn.textContent = "Delete";
+    }
   }
 });
 
