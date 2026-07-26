@@ -29,6 +29,9 @@ import {
 
 const CLIENT_SLUG = new URLSearchParams(window.location.search).get("client");
 
+// Keep this in sync with ADMIN_EMAIL in login.js and firestore.rules.
+const ADMIN_EMAIL = "gabrieliyanu2014@gmail.com";
+
 // Sensible fallbacks in case a client doc is missing launchDate/duration
 // (e.g. one created by hand before those fields existed).
 const CLIENT = {
@@ -506,7 +509,9 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   const c = clientSnap.data();
-  const owns = c.clientEmail && c.clientEmail.toLowerCase() === (user.email || "").toLowerCase();
+  const userEmail = (user.email || "").toLowerCase();
+  const isAdmin = userEmail === ADMIN_EMAIL;
+  const owns = isAdmin || (c.clientEmail && c.clientEmail.toLowerCase() === userEmail);
   if (!owns){
     await signOut(auth);
     showGateState("gateNoAccess");
@@ -530,7 +535,16 @@ onAuthStateChanged(auth, async (user) => {
   if (saved){
     applyVisitorToPage(saved);
     dismissGate();
+  } else if (isAdmin){
+    // Admin previewing a client's portal — skip the name-capture step,
+    // it's meant for actual visitors, not you.
+    applyVisitorToPage({ firstName: "Admin", lastName: "Preview" });
+    dismissGate();
   } else {
     showGateState("gateForm");
   }
+
+  // Always open at the top, regardless of any scroll position the browser
+  // tried to restore from a previous visit to this exact URL.
+  window.scrollTo(0, 0);
 });
