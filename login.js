@@ -85,13 +85,13 @@ loginForm.addEventListener("submit", async (event) => {
     await signInWithEmailAndPassword(auth, email, password);
 
     if (email === ADMIN_EMAIL) {
-      window.location.href = "admin.html";
+      window.location.href = "/admin/";
       return;
     }
 
     const slug = await findClientSlugForEmail(email);
     if (slug) {
-      window.location.href = `index.html?client=${slug}`;
+      window.location.href = `/?client=${slug}`;
       return;
     }
 
